@@ -63,6 +63,23 @@ Pass 2 — I tried ending on "before you even spoke" instead of "three times
     nervousness, and nervousness is the awkwardness the brief wants. The
     ellipsis after "So" stayed: it is the pause before the forced question,
     doing the awkwardness without spending words on it.
+
+Pass 3 — second read / judge tie-breaks. Re-reading the winner against the
+    two closest runners-up (C and D) after a break, the line still wins for
+    the same reason, and the re-read sharpened why. On a second read the joke
+    does not deflate: the first read lands on the surprise ("it already knew
+    the answer"), the second read lands on the manners ("Sorry. I know." —
+    a machine apologising for being caught pretending). That double landing
+    is what separates it from C, which only has the one courtesy beat, and
+    from D, whose malfunction gag is spent once the doors are known to be
+    stuck. In a tie-break the line also wins on economy: it is the only
+    candidate that plants the elevator, the small talk, the machine logic,
+    and the awkwardness in a single sentence with no setup clause — every
+    other candidate needs a second sentence or a scene-setting phrase to do
+    the same work. Nothing in the wording changed in this pass; the re-read
+    only confirmed the choice, and the code was restructured around it
+    (build_entry / validate_entry) so the line is assembled and gated in one
+    place instead of being inlined in main().
 """
 
 import os
@@ -76,6 +93,30 @@ def check_gate(text):
     return 1 <= len(text) <= MAX_CHARS and text.strip() != "" and "\n" not in text
 
 
+def build_entry():
+    """Assemble the single entry line.
+
+    The line lives in ENTRY so the wording is fixed in one place; this
+    helper is the only place main() gets it from, so a future edit to the
+    wording (or to how it is assembled) happens here and nowhere else.
+    """
+    return ENTRY
+
+
+def validate_entry(text):
+    """Gate guard: raise unless the line passes the sealed 1-200 gate.
+
+    Wraps check_gate so main() fails loudly with the offending length
+    instead of silently writing a line the judge would reject.
+    """
+    if not check_gate(text):
+        raise ValueError(
+            "entry fails the 1-200 character gate "
+            f"(got {len(text)} chars): {text!r}"
+        )
+    return text
+
+
 def entry_path():
     out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output"
     os.makedirs(out_dir, exist_ok=True)
@@ -83,9 +124,9 @@ def entry_path():
 
 
 def main():
-    assert check_gate(ENTRY), "entry fails the 1-200 character gate"
+    entry = validate_entry(build_entry())
     with open(entry_path(), "w", encoding="utf-8") as f:
-        f.write(ENTRY + "\n")
+        f.write(entry + "\n")
 
 
 if __name__ == "__main__":
